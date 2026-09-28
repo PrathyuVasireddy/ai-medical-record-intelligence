@@ -1,0 +1,57 @@
+{
+  "extractedData": {
+    "name": "Jane Doe",
+    "birthDate": "1986-04-20",
+    "gender": "Female",
+    "diagnosis": "Type 2 Diabetes Mellitus",
+    "medication": "Metformin 500 mg twice daily",
+    "allergy": "Penicillin"
+  },
+  "validation": {
+    "valid": true,
+    "errors": []
+  },
+  "fhirResources": {
+    "patient": {
+      "resourceType": "Patient",
+      "id": "patient-001",
+      "name": [
+        {
+          "text": "Jane Doe"
+        }
+      ],
+      "gender": "female",
+      "birthDate": "1986-04-20"
+    },
+    "condition": {
+      "resourceType": "Condition",
+      "id": "condition-001",
+      "subject": {
+        "reference": "Patient/patient-001"
+      },
+      "code": {
+        "text": "Type 2 Diabetes Mellitus"
+      }
+    },
+    "medication": {
+      "resourceType": "MedicationStatement",
+      "id": "medication-001",
+      "subject": {
+        "reference": "Patient/patient-001"
+      },
+      "medicationCodeableConcept": {
+        "text": "Metformin 500 mg twice daily"
+      }
+    },
+    "allergy": {
+      "resourceType": "AllergyIntolerance",
+      "id": "allergy-001",
+      "patient": {
+        "reference": "Patient/patient-001"
+      },
+      "code": {
+        "text": "Penicillin"
+      }
+    }
+  }
+}
