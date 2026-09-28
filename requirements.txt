@@ -1,1 +1,2 @@
-# No external packages required for version 1
+openai>=1.0.0
+python-dotenv>=1.0.0
