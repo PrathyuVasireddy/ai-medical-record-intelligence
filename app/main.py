@@ -29,6 +29,30 @@ def extract_section_value(text, section_name):
     return None
 
 
+def validate_patient_record(patient_data):
+    errors = []
+
+    if not patient_data["patient"]["name"]:
+        errors.append("Patient name is missing")
+
+    if not patient_data["patient"]["birthDate"]:
+        errors.append("Date of birth is missing")
+
+    if not patient_data["patient"]["gender"]:
+        errors.append("Gender is missing")
+
+    if not patient_data["conditions"][0]["name"]:
+        errors.append("Diagnosis is missing")
+
+    if not patient_data["medications"][0]["description"]:
+        errors.append("Medication is missing")
+
+    if not patient_data["allergies"][0]["name"]:
+        errors.append("Allergy information is missing")
+
+    return errors
+
+
 def create_patient_record():
     record_text = read_medical_record()
 
@@ -62,6 +86,13 @@ def create_patient_record():
             }
         ],
         "source_text": record_text
+    }
+
+    validation_errors = validate_patient_record(patient_data)
+
+    patient_data["validation"] = {
+        "valid": len(validation_errors) == 0,
+        "errors": validation_errors
     }
 
     return patient_data
