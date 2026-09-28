@@ -9,33 +9,28 @@ def read_medical_record():
         return file.read()
 
 
+def extract_value(text, label):
+    for line in text.splitlines():
+        if line.startswith(label):
+            return line.replace(label, "").strip()
+
+    return None
+
+
 def create_patient_record():
     record_text = read_medical_record()
 
+    patient_name = extract_value(record_text, "Patient Name:")
+    birth_date = extract_value(record_text, "Date of Birth:")
+    gender = extract_value(record_text, "Gender:")
+
     patient_data = {
-        "source_text": record_text,
         "patient": {
-            "name": "Jane Doe",
-            "birthDate": "1986-04-20",
-            "gender": "female"
+            "name": patient_name,
+            "birthDate": birth_date,
+            "gender": gender
         },
-        "conditions": [
-            {
-                "name": "Type 2 Diabetes Mellitus"
-            }
-        ],
-        "medications": [
-            {
-                "name": "Metformin",
-                "dose": "500 mg",
-                "frequency": "twice daily"
-            }
-        ],
-        "allergies": [
-            {
-                "name": "Penicillin"
-            }
-        ]
+        "source_text": record_text
     }
 
     return patient_data
