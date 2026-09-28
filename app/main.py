@@ -4,8 +4,8 @@ from pathlib import Path
 from ai_extractor import extract_medical_data_with_ai
 
 
-def read_medical_record():
-    file_path = Path(__file__).parent.parent / "sample-data" / "sample_record.txt"
+def read_medical_record(filename="sample_record.txt"):
+    file_path = Path(__file__).parent.parent / "sample-data" / filename
 
     with open(file_path, "r", encoding="utf-8") as file:
         return file.read()
@@ -123,7 +123,6 @@ def create_fhir_resources(data):
 def create_patient_record():
     record_text = read_medical_record()
 
-    extraction_method = "AI"
 
     try:
         extracted_data = extract_medical_data_with_ai(record_text)
@@ -151,7 +150,7 @@ def create_patient_record():
 
 
 if __name__ == "__main__":
-    record = create_patient_record()
+    record = create_patient_record("sample_record.txt")
 
     print("AI Medical Record Intelligence")
     print("--------------------------------")
