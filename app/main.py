@@ -1,7 +1,15 @@
 import json
+import os
+import re
+from datetime import datetime
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 from ai_extractor import extract_medical_data_with_ai
+
+
+load_dotenv()
 
 
 def read_medical_record(filename="sample_record.txt"):
@@ -32,13 +40,89 @@ def extract_section_value(text, section_name):
 
 
 def extract_with_rules(record_text):
+    name = extract_value(record_text, "Patient Name:")
+    birth_date = extract_value(record_text, "Date of Birth:")
+    gender = extract_value(record_text, "Gender:")
+    diagnosis = extract_section_value(record_text, "Diagnosis:")
+    medication = extract_section_value(record_text, "Medications:")
+    allergy = extract_section_value(record_text, "Allergies:")
+
+    # Natural-language patient name extraction
+    if not name:
+        match = re.search(
+            r"Patient is ([A-Z][a-z]+ [A-Z][a-z]+)",
+            record_text,
+            re.IGNORECASE
+        )
+
+        if match:
+            name = match.group(1)
+
+    # Natural-language DOB extraction and normalization
+    if not birth_date:
+        match = re.search(
+            r"born ([A-Za-z]+ \d{1,2}, \d{4})",
+            record_text,
+            re.IGNORECASE
+        )
+
+        if match:
+            raw_date = match.group(1)
+
+            try:
+                parsed_date = datetime.strptime(raw_date, "%B %d, %Y")
+                birth_date = parsed_date.strftime("%Y-%m-%d")
+            except ValueError:
+                birth_date = raw_date
+
+    # Natural-language diagnosis extraction
+    if not diagnosis:
+        match = re.search(
+            r"history of (.+?)(?: and is currently taking|\.|\n)",
+            record_text,
+            re.IGNORECASE
+        )
+
+        if match:
+            diagnosis = match.group(1).strip()
+
+    # Natural-language medication extraction
+    if not medication:
+        match = re.search(
+            r"taking ([^.]+)",
+            record_text,
+            re.IGNORECASE
+        )
+
+        if match:
+            medication = match.group(1).strip()
+
+    # Natural-language allergy extraction
+    if not allergy:
+        match = re.search(
+            r"allergy to ([^.]+)",
+            record_text,
+            re.IGNORECASE
+        )
+
+        if match:
+            allergy = match.group(1).strip()
+
+    # Infer gender from pronouns when explicit gender is unavailable
+    if not gender:
+        if re.search(r"\bshe\b", record_text, re.IGNORECASE):
+            gender = "Female"
+
+        elif re.search(r"\bhe\b", record_text, re.IGNORECASE):
+            gender = "Male"
+
     return {
-        "name": extract_value(record_text, "Patient Name:"),
-        "birthDate": extract_value(record_text, "Date of Birth:"),
-        "gender": extract_value(record_text, "Gender:"),
-        "diagnosis": extract_section_value(record_text, "Diagnosis:"),
-        "medication": extract_section_value(record_text, "Medications:"),
-        "allergy": extract_section_value(record_text, "Allergies:")
+        "name": name,
+        "birthDate": birth_date,
+        "gender": gender,
+        "diagnosis": diagnosis,
+        "medication": medication,
+        "allergy": allergy
     }
 
 
@@ -75,7 +159,11 @@ def create_fhir_resources(data):
                 "text": data.get("name")
             }
         ],
-        "gender": data.get("gender", "").lower() if data.get("gender") else None,
+        "gender": (
+            data.get("gender", "").lower()
+            if data.get("gender")
+            else None
+        ),
         "birthDate": data.get("birthDate")
     }
 
@@ -120,19 +208,27 @@ def create_fhir_resources(data):
     }
 
 
-def create_patient_record():
-    record_text = read_medical_record()
+def create_patient_record(filename="sample_record.txt"):
+    record_text = read_medical_record(filename)
 
+    use_ai = os.getenv("USE_AI", "false").lower() == "true"
 
-    try:
-        extracted_data = extract_medical_data_with_ai(record_text)
+    if use_ai:
+        extraction_method = "AI"
 
-    except Exception as error:
-        print(f"AI extraction failed: {error}")
-        print("Using rule-based extraction instead.")
+        try:
+            extracted_data = extract_medical_data_with_ai(record_text)
 
+        except Exception as error:
+            print(f"AI extraction failed: {error}")
+            print("Using rule-based extraction instead.")
+
+            extracted_data = extract_with_rules(record_text)
+            extraction_method = "Rule-based fallback"
+
+    else:
         extracted_data = extract_with_rules(record_text)
-        extraction_method = "Rule-based fallback"
+        extraction_method = "Rule-based"
 
     validation_errors = validate_patient_record(extracted_data)
 
@@ -150,7 +246,7 @@ def create_patient_record():
 
 
 if __name__ == "__main__":
-    record = create_patient_record("sample_record.txt")
+    record = create_patient_record("unstructured_record.txt")
 
     print("AI Medical Record Intelligence")
     print("--------------------------------")
