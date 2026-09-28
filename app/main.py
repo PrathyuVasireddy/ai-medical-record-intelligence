@@ -246,9 +246,18 @@ def create_patient_record(filename="sample_record.txt"):
 
 
 if __name__ == "__main__":
-    record = create_patient_record("unstructured_record.txt")
+    import sys
+
+    filename = "sample_record.txt"
+
+    if len(sys.argv) > 1:
+        filename = sys.argv[1]
+
+    record = create_patient_record(filename)
 
     print("AI Medical Record Intelligence")
     print("--------------------------------")
+    print(f"Input file: {filename}")
+    print()
 
     print(json.dumps(record, indent=4))
