@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+from ai_extractor import extract_medical_data_with_ai
+
 
 def read_medical_record():
     file_path = Path(__file__).parent.parent / "sample-data" / "sample_record.txt"
@@ -29,25 +31,36 @@ def extract_section_value(text, section_name):
     return None
 
 
+def extract_with_rules(record_text):
+    return {
+        "name": extract_value(record_text, "Patient Name:"),
+        "birthDate": extract_value(record_text, "Date of Birth:"),
+        "gender": extract_value(record_text, "Gender:"),
+        "diagnosis": extract_section_value(record_text, "Diagnosis:"),
+        "medication": extract_section_value(record_text, "Medications:"),
+        "allergy": extract_section_value(record_text, "Allergies:")
+    }
+
+
 def validate_patient_record(data):
     errors = []
 
-    if not data["name"]:
+    if not data.get("name"):
         errors.append("Patient name is missing")
 
-    if not data["birthDate"]:
+    if not data.get("birthDate"):
         errors.append("Date of birth is missing")
 
-    if not data["gender"]:
+    if not data.get("gender"):
         errors.append("Gender is missing")
 
-    if not data["diagnosis"]:
+    if not data.get("diagnosis"):
         errors.append("Diagnosis is missing")
 
-    if not data["medication"]:
+    if not data.get("medication"):
         errors.append("Medication is missing")
 
-    if not data["allergy"]:
+    if not data.get("allergy"):
         errors.append("Allergy information is missing")
 
     return errors
@@ -59,11 +72,11 @@ def create_fhir_resources(data):
         "id": "patient-001",
         "name": [
             {
-                "text": data["name"]
+                "text": data.get("name")
             }
         ],
-        "gender": data["gender"].lower() if data["gender"] else None,
-        "birthDate": data["birthDate"]
+        "gender": data.get("gender", "").lower() if data.get("gender") else None,
+        "birthDate": data.get("birthDate")
     }
 
     condition = {
@@ -73,7 +86,7 @@ def create_fhir_resources(data):
             "reference": "Patient/patient-001"
         },
         "code": {
-            "text": data["diagnosis"]
+            "text": data.get("diagnosis")
         }
     }
 
@@ -84,7 +97,7 @@ def create_fhir_resources(data):
             "reference": "Patient/patient-001"
         },
         "medicationCodeableConcept": {
-            "text": data["medication"]
+            "text": data.get("medication")
         }
     }
 
@@ -95,7 +108,7 @@ def create_fhir_resources(data):
             "reference": "Patient/patient-001"
         },
         "code": {
-            "text": data["allergy"]
+            "text": data.get("allergy")
         }
     }
 
@@ -110,20 +123,24 @@ def create_fhir_resources(data):
 def create_patient_record():
     record_text = read_medical_record()
 
-    extracted_data = {
-        "name": extract_value(record_text, "Patient Name:"),
-        "birthDate": extract_value(record_text, "Date of Birth:"),
-        "gender": extract_value(record_text, "Gender:"),
-        "diagnosis": extract_section_value(record_text, "Diagnosis:"),
-        "medication": extract_section_value(record_text, "Medications:"),
-        "allergy": extract_section_value(record_text, "Allergies:")
-    }
+    extraction_method = "AI"
+
+    try:
+        extracted_data = extract_medical_data_with_ai(record_text)
+
+    except Exception as error:
+        print(f"AI extraction failed: {error}")
+        print("Using rule-based extraction instead.")
+
+        extracted_data = extract_with_rules(record_text)
+        extraction_method = "Rule-based fallback"
 
     validation_errors = validate_patient_record(extracted_data)
 
     fhir_resources = create_fhir_resources(extracted_data)
 
     return {
+        "extractionMethod": extraction_method,
         "extractedData": extracted_data,
         "validation": {
             "valid": len(validation_errors) == 0,
