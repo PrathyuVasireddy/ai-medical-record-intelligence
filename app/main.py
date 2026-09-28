@@ -17,6 +17,18 @@ def extract_value(text, label):
     return None
 
 
+def extract_section_value(text, section_name):
+    lines = text.splitlines()
+
+    for index, line in enumerate(lines):
+        if line.strip() == section_name:
+            for next_line in lines[index + 1:]:
+                if next_line.strip():
+                    return next_line.strip()
+
+    return None
+
+
 def create_patient_record():
     record_text = read_medical_record()
 
@@ -24,12 +36,31 @@ def create_patient_record():
     birth_date = extract_value(record_text, "Date of Birth:")
     gender = extract_value(record_text, "Gender:")
 
+    diagnosis = extract_section_value(record_text, "Diagnosis:")
+    medication = extract_section_value(record_text, "Medications:")
+    allergy = extract_section_value(record_text, "Allergies:")
+
     patient_data = {
         "patient": {
             "name": patient_name,
             "birthDate": birth_date,
             "gender": gender
         },
+        "conditions": [
+            {
+                "name": diagnosis
+            }
+        ],
+        "medications": [
+            {
+                "description": medication
+            }
+        ],
+        "allergies": [
+            {
+                "name": allergy
+            }
+        ],
         "source_text": record_text
     }
 
