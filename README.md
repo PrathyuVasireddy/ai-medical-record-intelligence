@@ -1,61 +1,31 @@
 # AI Medical Record Intelligence
 
-An open-source prototype demonstrating how AI can transform unstructured medical information into structured healthcare data.
+A healthcare engineering prototype that transforms synthetic unstructured medical records into structured, validated healthcare data and FHIR-style resources.
 
-## Project Goal
+## Why This Project?
 
-Healthcare information is often stored in unstructured documents such as clinical notes, discharge summaries, and medical reports.
+Healthcare information is frequently exchanged through unstructured documents such as clinical notes, discharge summaries, scanned forms, and medical reports.
 
-This project explores how software and AI can extract important information from synthetic medical records and convert it into structured data.
+Turning that information into structured data is important for interoperability, automation, analytics, and AI-enabled healthcare workflows.
 
-## Initial Features
+This project explores that transformation pipeline using synthetic data.
 
-- Read synthetic medical records
-- Extract patient information
-- Extract diagnoses
-- Extract medications
-- Convert extracted information into structured JSON
-- Validate extracted information
-- Explore FHIR-style healthcare data structures
+## Architecture
 
-## Planned Architecture
-
-Medical Document
-
-↓
-
+```text
+Medical Record
+      |
+      v
 Text Extraction
-
-↓
-
-AI / Information Extraction
-
-↓
-
+      |
+      v
+Information Extraction
+      |
+      v
 Validation
-
-↓
-
-Structured Healthcare Data
-
-↓
-
-Human Review
-
-## Technologies
-
-- Python
-- JSON
-- Healthcare Data
-- FHIR concepts
-- AI / LLM integration
-
-## Privacy
-
-This project uses only synthetic or publicly available sample data.
-
-No real patient information or employer data is used.
-
-## Status
-
-🚧 Project under active development.
+      |
+      v
+Structured JSON
+      |
+      v
+FHIR-Style Resources
