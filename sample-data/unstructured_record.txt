@@ -1,0 +1,10 @@
+Patient is Jane Doe, born April 20, 1986.
+
+She has a history of type 2 diabetes mellitus and is currently taking Metformin 500 mg twice daily.
+
+The patient reports that her glucose control has improved after making dietary changes.
+
+She has a known allergy to Penicillin.
+
+Plan:
+Continue current medication and monitor blood glucose regularly.
