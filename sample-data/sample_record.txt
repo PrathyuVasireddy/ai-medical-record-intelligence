@@ -1,0 +1,18 @@
+Patient Name: Jane Doe
+
+Date of Birth: 1986-04-20
+
+Gender: Female
+
+Diagnosis:
+Type 2 Diabetes Mellitus
+
+Medications:
+Metformin 500 mg twice daily
+
+Allergies:
+Penicillin
+
+Clinical Notes:
+Patient reports improved glucose control after dietary changes.
+Continue current medication and monitor blood glucose regularly.
