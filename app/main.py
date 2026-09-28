@@ -29,73 +29,108 @@ def extract_section_value(text, section_name):
     return None
 
 
-def validate_patient_record(patient_data):
+def validate_patient_record(data):
     errors = []
 
-    if not patient_data["patient"]["name"]:
+    if not data["name"]:
         errors.append("Patient name is missing")
 
-    if not patient_data["patient"]["birthDate"]:
+    if not data["birthDate"]:
         errors.append("Date of birth is missing")
 
-    if not patient_data["patient"]["gender"]:
+    if not data["gender"]:
         errors.append("Gender is missing")
 
-    if not patient_data["conditions"][0]["name"]:
+    if not data["diagnosis"]:
         errors.append("Diagnosis is missing")
 
-    if not patient_data["medications"][0]["description"]:
+    if not data["medication"]:
         errors.append("Medication is missing")
 
-    if not patient_data["allergies"][0]["name"]:
+    if not data["allergy"]:
         errors.append("Allergy information is missing")
 
     return errors
 
 
+def create_fhir_resources(data):
+    patient = {
+        "resourceType": "Patient",
+        "id": "patient-001",
+        "name": [
+            {
+                "text": data["name"]
+            }
+        ],
+        "gender": data["gender"].lower() if data["gender"] else None,
+        "birthDate": data["birthDate"]
+    }
+
+    condition = {
+        "resourceType": "Condition",
+        "id": "condition-001",
+        "subject": {
+            "reference": "Patient/patient-001"
+        },
+        "code": {
+            "text": data["diagnosis"]
+        }
+    }
+
+    medication = {
+        "resourceType": "MedicationStatement",
+        "id": "medication-001",
+        "subject": {
+            "reference": "Patient/patient-001"
+        },
+        "medicationCodeableConcept": {
+            "text": data["medication"]
+        }
+    }
+
+    allergy = {
+        "resourceType": "AllergyIntolerance",
+        "id": "allergy-001",
+        "patient": {
+            "reference": "Patient/patient-001"
+        },
+        "code": {
+            "text": data["allergy"]
+        }
+    }
+
+    return {
+        "patient": patient,
+        "condition": condition,
+        "medication": medication,
+        "allergy": allergy
+    }
+
+
 def create_patient_record():
     record_text = read_medical_record()
 
-    patient_name = extract_value(record_text, "Patient Name:")
-    birth_date = extract_value(record_text, "Date of Birth:")
-    gender = extract_value(record_text, "Gender:")
+    extracted_data = {
+        "name": extract_value(record_text, "Patient Name:"),
+        "birthDate": extract_value(record_text, "Date of Birth:"),
+        "gender": extract_value(record_text, "Gender:"),
+        "diagnosis": extract_section_value(record_text, "Diagnosis:"),
+        "medication": extract_section_value(record_text, "Medications:"),
+        "allergy": extract_section_value(record_text, "Allergies:")
+    }
 
-    diagnosis = extract_section_value(record_text, "Diagnosis:")
-    medication = extract_section_value(record_text, "Medications:")
-    allergy = extract_section_value(record_text, "Allergies:")
+    validation_errors = validate_patient_record(extracted_data)
 
-    patient_data = {
-        "patient": {
-            "name": patient_name,
-            "birthDate": birth_date,
-            "gender": gender
+    fhir_resources = create_fhir_resources(extracted_data)
+
+    return {
+        "extractedData": extracted_data,
+        "validation": {
+            "valid": len(validation_errors) == 0,
+            "errors": validation_errors
         },
-        "conditions": [
-            {
-                "name": diagnosis
-            }
-        ],
-        "medications": [
-            {
-                "description": medication
-            }
-        ],
-        "allergies": [
-            {
-                "name": allergy
-            }
-        ],
-        "source_text": record_text
+        "fhirResources": fhir_resources
     }
-
-    validation_errors = validate_patient_record(patient_data)
-
-    patient_data["validation"] = {
-        "valid": len(validation_errors) == 0,
-        "errors": validation_errors
-    }
-
-    return patient_data
 
 
 if __name__ == "__main__":
