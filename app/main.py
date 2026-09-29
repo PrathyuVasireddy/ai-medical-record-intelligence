@@ -47,18 +47,15 @@ def extract_with_rules(record_text):
     medication = extract_section_value(record_text, "Medications:")
     allergy = extract_section_value(record_text, "Allergies:")
 
-    # Natural-language patient name extraction
     if not name:
         match = re.search(
             r"Patient is ([A-Z][a-z]+ [A-Z][a-z]+)",
             record_text,
             re.IGNORECASE
         )
-
         if match:
             name = match.group(1)
 
-    # Natural-language DOB extraction and normalization
     if not birth_date:
         match = re.search(
             r"born ([A-Za-z]+ \d{1,2}, \d{4})",
@@ -75,7 +72,6 @@ def extract_with_rules(record_text):
             except ValueError:
                 birth_date = raw_date
 
-    # Natural-language diagnosis extraction
     if not diagnosis:
         match = re.search(
             r"history of (.+?)(?: and is currently taking|\.|\n)",
@@ -86,10 +82,9 @@ def extract_with_rules(record_text):
         if match:
             diagnosis = match.group(1).strip()
 
-    # Natural-language medication extraction
     if not medication:
         match = re.search(
-            r"taking ([^.]+)",
+            r"taking\s+([^.]+)",
             record_text,
             re.IGNORECASE
         )
@@ -97,7 +92,6 @@ def extract_with_rules(record_text):
         if match:
             medication = match.group(1).strip()
 
-    # Natural-language allergy extraction
     if not allergy:
         match = re.search(
             r"allergy to ([^.]+)",
@@ -108,11 +102,9 @@ def extract_with_rules(record_text):
         if match:
             allergy = match.group(1).strip()
 
-    # Infer gender from pronouns when explicit gender is unavailable
     if not gender:
         if re.search(r"\bshe\b", record_text, re.IGNORECASE):
             gender = "Female"
-
         elif re.search(r"\bhe\b", record_text, re.IGNORECASE):
             gender = "Male"
 
@@ -124,7 +116,6 @@ def extract_with_rules(record_text):
         "medication": medication,
         "allergy": allergy
     }
-
 
 def validate_patient_record(data):
     errors = []
